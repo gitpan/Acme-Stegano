@@ -88,7 +88,6 @@ sub extract
                 $binstr .= ++$i % 2 ? 0 x length($1) : 1 x length($1)
                         if $line =~ s/( +)$//
         }
-        print "$binstr\n";
         return substr(pack("b*", $binstr),1)    # Delete our mark
 }
 
