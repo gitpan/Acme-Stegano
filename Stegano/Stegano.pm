@@ -6,7 +6,7 @@ use Tie::File;
 use Carp;
 use vars q/$VERSION/;
 
-$VERSION = '0.01';
+$VERSION = '0.02';
 
 =head1 NAME
 
@@ -28,7 +28,7 @@ Acme::Stegano - Put some text inside another
 =head1 DESCRIPTION
 
 You can put some text inside another and it seems to remain the same.
-Then you could extract the text doing de inverse operation. The idea was from
+Then you could extract the text doing the inverse operation. The idea was from
 Damian Cownay in his Acme::Bleach.
 
 =head1 SPECIAL THANKS
@@ -59,9 +59,8 @@ sub insert
 {
         my ($self,$text) = @_;
         my ($max_str,$max_cont,@map_letters) = (0,0);
-        my $binstr = unpack "b*", $text;
+        my $binstr = unpack "b*", " $text";             # It must begin with 0
         $_ > $max_str and $max_str = $_ for map { length } @$self;
-
         while ($binstr =~ /((.)\2*)/g)
         {
                 my $len = length($1);
@@ -73,7 +72,8 @@ sub insert
 
         for (my $i=0;$i<@$self;$i++)
         {
-                $self->[$i] .= " " x shift(@map_letters) if $map_file[$i] and @map_letters;
+                $self->[$i] .= " " x shift(@map_letters)
+                        if $map_file[$i] and @map_letters;
         }
         carp "Text is not enougth large to insert all chars" if @map_letters;
         return ! @map_letters;
@@ -82,13 +82,14 @@ sub insert
 sub extract
 {
         my $self = shift;
-        my ($bitstr,$i);
+        my ($binstr,$i);
         for my $line (@$self)
         {
-                $bitstr .= ++$i % 2 ? 0 x length($1) : 1 x length($1)
+                $binstr .= ++$i % 2 ? 0 x length($1) : 1 x length($1)
                         if $line =~ s/( +)$//
         }
-        return pack "b*",$bitstr;
+        print "$binstr\n";
+        return substr(pack("b*", $binstr),1)    # Delete our mark
 }
 
 1;
